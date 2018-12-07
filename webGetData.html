@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MPURS</title>
+  <script type="text/javascript" src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function(){
+      namespace = '/home';
+      var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+      socket.on('timeElapsed', function(msg) {
+        $('#timeElapsed').empty();
+        $('#timeElapsed').append('Time Elapsed: ' + msg.data);
+      });
+    });
+  </script>
+</head>
+<style>
+  .slogan {
+      line-height:1;
+      top: 0px; /* Changes the space between the logo and the slogan */
+      font-size: 1em; /* Changes the font size of the slogan */
+      font-style: italic; /* Changes the font style of the slogan */
+      color:#222222; /* Changes the color of the slogan */
+      letter-spacing:0px; /* Changes the letter spacing of the slogan */
+      left: 200px;
+  }
+</style>
+<body>
+  <h1 align = center>MPURS</h1>
+  <p class="slogan" align = center>Mark Prediction and University Recommendation System</p>
+  <br>
+  <div id="timeElapsed" style="font-size:15px"></div>
+  <form action="/result">
+    <input type="radio" name="subCom" value="nature" checked> Nature
+    <input type="radio" name="subCom" value="social"> Social <br>
+    Note: Please type medium score of below subjects in grade order (10, 11, 12)
+    <br>
+    Math:
+    <input type="number" name="math0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="math1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="math2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+    Literature:
+    <input type="number" name="literature0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="literature1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="literature2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+    English:
+    <input type="number" name="english0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="english1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="english2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+    Physics:
+    <input type="number" name="physics0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="physics1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="physics2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+    Chemistry:
+    <input type="number" name="chemistry0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="chemistry1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="chemistry2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+    Biology:
+    <input type="number" name="biology0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="biology1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="biology2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+    History:
+    <input type="number" name="history0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="history1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="history2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+    Geography:
+    <input type="number" name="geography0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="geography1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="geography2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+    Civic Education:
+    <input type="number" name="civiceducation0" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value = "0" required = "True">
+    <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
+
+    <input type="submit" value="Submit">
+
+  </form>
+</body>
