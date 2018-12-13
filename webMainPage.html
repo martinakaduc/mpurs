@@ -8,9 +8,29 @@
     $(document).ready(function(){
       namespace = '/home';
       var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+      var subjects = ['math', 'literature', 'english', 'physics', 'chemistry', 'biology', 'history', 'geography', 'civiceducation'];
+      var numberOfYear = 3
       socket.on('timeElapsed', function(msg) {
         $('#timeElapsed').empty();
         $('#timeElapsed').append('Time Elapsed: ' + msg.data);
+      });
+      socket.on('markPrediction', function(msg) {
+        var markPrediction = msg.data.slice(1, -1).split(',');
+        for (var i = 0; i < subjects.length; i++) {
+          $('#' + subjects[i]).empty();
+          $('#' + subjects[i]).append(markPrediction[i]);
+        }
+      });
+      $('#submitButton').click(function(event) {
+        var markSubmit = []
+        markSubmit.push($("input[name='subCom']:checked").val())
+        for (var i = 0; i < numberOfYear; i++) {
+          for (var k = 0; k < subjects.length; k++) {
+            markSubmit.push(document.getElementsByName(subjects[k] + i)[0].value)
+          };
+        };
+        socket.emit('calMark', markSubmit);
+        return 0;
       });
     });
   </script>
@@ -25,13 +45,16 @@
       letter-spacing:0px; /* Changes the letter spacing of the slogan */
       left: 200px;
   }
+  div {
+    display: inline;
+  }
 </style>
 <body>
   <h1 align = center>MPURS</h1>
   <p class="slogan" align = center>Mark Prediction and University Recommendation System</p>
-  <br>
-  <div id="timeElapsed" style="font-size:15px"></div>
-  <form action="/result">
+  <div id  = 'timeElapsed' align = "center"></div>
+  <h3>Input Mark Data</h3>
+  <form>
     <input type="radio" name="subCom" value="nature" checked> Nature
     <input type="radio" name="subCom" value="social"> Social <br>
     Note: Please type medium score of below subjects in grade order (10, 11, 12)
@@ -72,8 +95,26 @@
     <input type="number" name="civiceducation0" min="0" max="10" step="0.1" value = "0" required = "True">
     <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value = "0" required = "True">
     <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-
-    <input type="submit" value="Submit">
-
   </form>
+  <button id = "submitButton">Submit</button>
+  <br>
+  <h3>Mark Prediction</h3>
+  Math:
+  <div id="math"></div>
+  Literature:
+  <div id="literature"></div>
+  English:
+  <div id="english"></div>
+  Physics:
+  <div id="physics"></div>
+  Chemistry:
+  <div id="chemistry"></div>
+  Biology:
+  <div id="biology"></div>
+  History:
+  <div id="history"></div>
+  Geography:
+  <div id="geography"></div>
+  Civic Education:
+  <div id="civiceducation"></div>
 </body>
