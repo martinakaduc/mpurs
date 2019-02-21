@@ -1,7 +1,9 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="vi">
 <head>
   <title>MPURS</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script type="text/javascript" src="//code.jquery.com/jquery-2.1.4.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
   <script type="text/javascript" charset="utf-8">
@@ -26,12 +28,33 @@
         markSubmit.push($("input[name='subCom']:checked").val())
         for (var i = 0; i < numberOfYear; i++) {
           for (var k = 0; k < subjects.length; k++) {
-            markSubmit.push(document.getElementsByName(subjects[k] + i)[0].value)
+            markSubmit.push(document.getElementsByName(subjects[k] + i)[0].value);
           };
         };
         socket.emit('calMark', markSubmit);
         return 0;
       });
+      var subCom = document.getElementsByName("subCom");
+      for (var i = 0; i < subCom.length; i++) {
+        subCom[i].onclick = function(event) {
+            // document.write(event.target.value);
+            if (event.target.value == "nature") {
+              var readOnlySubject =  subjects.slice(6, 9);
+            } else if (event.target.value == "social") {
+              var readOnlySubject = subjects.slice(3, 6);
+            };
+            var requiredSubject = $(subjects).not(readOnlySubject).get();
+            for (var i = 0; i < numberOfYear; i++) {
+              for (var k = 0; k < readOnlySubject.length; k++) {
+                document.getElementsByName(readOnlySubject[k] + i)[0].readOnly = true;
+              };
+              for (var l = 0; l < requiredSubject.length; l++) {
+                document.getElementsByName(requiredSubject[l] + i)[0].readOnly = false;
+              };
+            };
+        };
+      };
+      subCom[0].click();
     });
   </script>
 </head>
@@ -53,68 +76,102 @@
   <h1 align = center>MPURS</h1>
   <p class="slogan" align = center>Mark Prediction and University Recommendation System</p>
   <div id  = 'timeElapsed' align = "center"></div>
-  <h3>Input Mark Data</h3>
-  <form>
-    <input type="radio" name="subCom" value="nature" checked> Nature
-    <input type="radio" name="subCom" value="social"> Social <br>
-    Note: Please type medium score of below subjects in grade order (10, 11, 12)
+  <h3>Điểm nhập vào</h3>
+    <input type="radio" name="subCom" value="nature" checked> KHỐI: MÔN TỰ NHIÊN
+    <input type="radio" name="subCom" value="social"> KHỐI: MÔN XÃ HÔI <br>
+    Chú ý: Vui lòng nhập điểm trung bình các môn (lớp 10, 11, 12)
     <br>
-    Math:
-    <input type="number" name="math0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="math1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="math2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-    Literature:
-    <input type="number" name="literature0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="literature1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="literature2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-    English:
-    <input type="number" name="english0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="english1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="english2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-    Physics:
-    <input type="number" name="physics0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="physics1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="physics2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-    Chemistry:
-    <input type="number" name="chemistry0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="chemistry1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="chemistry2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-    Biology:
-    <input type="number" name="biology0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="biology1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="biology2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-    History:
-    <input type="number" name="history0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="history1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="history2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-    Geography:
-    <input type="number" name="geography0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="geography1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="geography2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-    Civic Education:
-    <input type="number" name="civiceducation0" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value = "0" required = "True">
-    <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value = "0" required = "True"><br>
-  </form>
-  <button id = "submitButton">Submit</button>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">Toán:</div>
+          <div>
+              <input type="number" name="math0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="math1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="math2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+      </div>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">Ngữ văn:</div>
+          <div>
+              <input type="number" name="literature0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="literature1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="literature2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+      </div>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">Ngoại ngữ:</div>
+          <div>
+              <input type="number" name="english0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="english1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="english2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+       </div>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">Vật lý: </div>
+          <div>
+              <input type="number" name="physics0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="physics1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="physics2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+      </div>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">Hóa học:</div>
+          <div>
+              <input type="number" name="chemistry0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="chemistry1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="chemistry2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+      </div>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">Sinh học:</div>
+          <div>
+              <input type="number" name="biology0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="biology1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="biology2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+      </div>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">Lịch sử:</div>
+          <div>
+              <input type="number" name="history0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="history1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="history2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+      </div>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">Địa lý:</div>
+          <div>
+              <input type="number" name="geography0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="geography1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="geography2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+      </div>
+      <div>
+          <div style="width: 110px; color: red; float:left; background-color:yellow">GDCD:</div>
+          <div>
+              <input type="number" name="civiceducation0" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value="0" required="True">
+              <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value="0" required="True"><br>
+          </div>
+      </div>
+  <button id = "submitButton">Dự đoán</button>
   <br>
-  <h3>Mark Prediction</h3>
-  Math:
+  <h3>Điểm dự đoán</h3>
+  Toán:
   <div id="math"></div>
-  Literature:
+  | Ngữ văn:
   <div id="literature"></div>
-  English:
+  | Ngoại ngữ:
   <div id="english"></div>
-  Physics:
+  | Vật lý:
   <div id="physics"></div>
-  Chemistry:
+  | Hóa học:
   <div id="chemistry"></div>
-  Biology:
+  | Sinh học:
   <div id="biology"></div>
-  History:
+  | Lịch sử:
   <div id="history"></div>
-  Geography:
+  | Địa lý:
   <div id="geography"></div>
-  Civic Education:
+  | GDCD:
   <div id="civiceducation"></div>
 </body>
