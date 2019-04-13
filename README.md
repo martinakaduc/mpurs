@@ -8,5 +8,6 @@ Python libraries used:
 - socketio (pythoh-socketio)
 - pickle
 - xlrd
+- json
 Run this code with python 3
 >>python3 main.py
