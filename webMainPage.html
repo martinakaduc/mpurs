@@ -1,12 +1,21 @@
-<!DOCTYPE HTML>
+﻿<!DOCTYPE HTML>
 <html lang="vi">
 <head>
   <title>MPURS</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script type="text/javascript" src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-reboot.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-grid.css">
+  <script type="text/javascript" src="//code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script type="text/javascript" src="/static/js/bootstrap.bundle.js"></script>
+  <script type="text/javascript" src="/static/js/bootstrap.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
   <script type="text/javascript" charset="utf-8">
+    function round_quarter(x) {
+      return Math.round(x*4)/4;
+    };
+
     $(document).ready(function(){
       namespace = '/home';
       var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
@@ -16,11 +25,156 @@
         $('#timeElapsed').empty();
         $('#timeElapsed').append('Time Elapsed: ' + msg.data);
       });
+
+      socket.on('passOrFail', function(msg) {
+        $('#passOrFail').empty();
+        $('#passOrFail').append('Dự đoán: ' + msg.data);
+      });
+
       socket.on('markPrediction', function(msg) {
         var markPrediction = msg.data.slice(1, -1).split(',');
+        var markDict = {};
         for (var i = 0; i < subjects.length; i++) {
           $('#' + subjects[i]).empty();
           $('#' + subjects[i]).append(markPrediction[i]);
+          markDict[subjects[i]] = parseFloat(markPrediction[i]);
+        }
+
+        var calculatedMarkDict = {};
+        calculatedMarkDict['A00'] = markDict['math'] + markDict['physics'] + markDict['chemistry'];
+        calculatedMarkDict['A01'] = markDict['math'] + markDict['physics'] + markDict['english'];
+        calculatedMarkDict['A02'] = markDict['math'] + markDict['physics'] + markDict['biology'];
+        calculatedMarkDict['B00'] = markDict['math'] + markDict['chemistry'] + markDict['biology'];
+        calculatedMarkDict['C00'] = markDict['literature'] + markDict['history'] + markDict['geography'];
+        calculatedMarkDict['D01'] = markDict['math'] + markDict['literature'] + markDict['english'];
+        calculatedMarkDict['D07'] = markDict['math'] + markDict['chemistry'] + markDict['english'];
+        calculatedMarkDict['D09'] = markDict['math'] + markDict['history'] + markDict['english'];
+
+        for (var key in calculatedMarkDict) {
+          calculatedMarkDict[key] = round_quarter(calculatedMarkDict[key]);
+        }
+        // socket.emit('debug', calculatedMarkDict);
+        var options = {
+        	animationEnabled: true,
+        	title: {
+        		text: "Kết quả điểm theo khối",
+        		fontColor: "Peru"
+        	},
+        	axisY: {
+        		tickThickness: 0,
+        		lineThickness: 0,
+        		valueFormatString: " ",
+        		gridThickness: 0
+        	},
+        	axisX: {
+        		tickThickness: 0,
+        		lineThickness: 0,
+        		labelFontSize: 18,
+        		labelFontColor: "Peru"
+        	},
+        	data: [{
+        		indexLabelFontSize: 20,
+        		toolTipContent: "<span style=\"color:#62C9C3\">{indexLabel}:</span> <span style=\"color:#CD853F\"><strong>{y}</strong></span>",
+        		indexLabelPlacement: "inside",
+        		indexLabelFontColor: "white",
+        		indexLabelFontWeight: 600,
+        		indexLabelFontFamily: "Verdana",
+        		color: "#62C9C3",
+        		type: "bar",
+        		dataPoints: [
+        			{ y: calculatedMarkDict['D09'], label: calculatedMarkDict['D09'], indexLabel: "D09" },
+        			{ y: calculatedMarkDict['D07'], label: calculatedMarkDict['D07'], indexLabel: "D07" },
+        			{ y: calculatedMarkDict['D01'], label: calculatedMarkDict['D01'], indexLabel: "D01" },
+        			{ y: calculatedMarkDict['C00'], label: calculatedMarkDict['C00'], indexLabel: "C00" },
+        			{ y: calculatedMarkDict['B00'], label: calculatedMarkDict['B00'], indexLabel: "B00" },
+        			{ y: calculatedMarkDict['A02'], label: calculatedMarkDict['A02'], indexLabel: "A02" },
+        			{ y: calculatedMarkDict['A01'], label: calculatedMarkDict['A01'], indexLabel: "A01" },
+              { y: calculatedMarkDict['A00'], label: calculatedMarkDict['A00'], indexLabel: "A00" }
+        		]
+        	}]
+        };
+        $("#chartContainer").CanvasJSChart(options);
+
+        var chart = new CanvasJS.Chart("chartContainer_mean", {
+        	theme:"light2",
+        	animationEnabled: true,
+        	title:{
+        		text: "So sánh độ lệch so với điểm trung bình"
+        	},
+        	axisY :{
+        		includeZero: true,
+        		title: "Điểm trung bình"
+        	},
+        	toolTip: {
+        		shared: "true"
+        	},
+        	legend:{
+        		cursor:"pointer",
+        		itemclick : toggleDataSeries
+        	},
+        	data: [{
+        		type: "spline",
+        		visible: false,
+        		showInLegend: true,
+        		yValueFormatString: "##.00",
+        		name: "Trung bình Khối tự nhiên",
+        		dataPoints: [
+        			{ label: "Toán", y: msg.meanMark['nature'][0]},
+        			{ label: "Văn", y: msg.meanMark['nature'][1]},
+        			{ label: "Tiếng Anh", y: msg.meanMark['nature'][2]},
+        			{ label: "Vật lí", y: msg.meanMark['nature'][3]},
+        			{ label: "Hoá học", y: msg.meanMark['nature'][4]},
+        			{ label: "Sinh học", y: msg.meanMark['nature'][5]},
+        			{ label: "Lịch sử", y: msg.meanMark['nature'][6]},
+        			{ label: "Địa lý", y: msg.meanMark['nature'][7]},
+        			{ label: "GDCD", y: msg.meanMark['nature'][8]}
+        		]
+        	},
+        	{
+        		type: "spline",
+        		showInLegend: true,
+        		visible: false,
+        		yValueFormatString: "##.00",
+        		name: "Trung bình Khối xã hội",
+        		dataPoints: [
+              { label: "Toán", y: msg.meanMark['social'][0]},
+        			{ label: "Văn", y: msg.meanMark['social'][1]},
+        			{ label: "Tiếng Anh", y: msg.meanMark['social'][2]},
+        			{ label: "Vật lí", y: msg.meanMark['social'][3]},
+        			{ label: "Hoá học", y: msg.meanMark['social'][4]},
+        			{ label: "Sinh học", y: msg.meanMark['social'][5]},
+        			{ label: "Lịch sử", y: msg.meanMark['social'][6]},
+        			{ label: "Địa lý", y: msg.meanMark['social'][7]},
+        			{ label: "GDCD", y: msg.meanMark['social'][8]}
+        		]
+        	},
+        	{
+        		type: "spline",
+        		showInLegend: true,
+        		yValueFormatString: "##.00",
+        		name: "Điểm dự đoán",
+        		dataPoints: [
+              { label: "Toán", y: markDict['math']},
+        			{ label: "Văn", y: markDict['literature']},
+        			{ label: "Tiếng Anh", y: markDict['english']},
+        			{ label: "Vật lí", y: markDict['physics']},
+        			{ label: "Hoá học", y: markDict['chemistry']},
+        			{ label: "Sinh học", y: markDict['biology']},
+        			{ label: "Lịch sử", y: markDict['history']},
+        			{ label: "Địa lý", y: markDict['geography']},
+        			{ label: "GDCD", y: markDict['civiceducation']}
+        		]
+        	}]
+        });
+        chart.render();
+
+        function toggleDataSeries(e) {
+        	if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible ){
+        		e.dataSeries.visible = false;
+        	} else {
+        		e.dataSeries.visible = true;
+        	}
+        	chart.render();
         }
       });
       $('#submitButton').click(function(event) {
@@ -55,6 +209,7 @@
         };
       };
       subCom[0].click();
+
     });
   </script>
 </head>
@@ -64,114 +219,163 @@
       top: 0px; /* Changes the space between the logo and the slogan */
       font-size: 1em; /* Changes the font size of the slogan */
       font-style: italic; /* Changes the font style of the slogan */
-      color:#222222; /* Changes the color of the slogan */
+      /* color:#222222; /* Changes the color of the slogan */ */
       letter-spacing:0px; /* Changes the letter spacing of the slogan */
       left: 200px;
   }
-  div {
-    display: inline;
+
+  .header {
+    background-color: rgba(190, 190, 190, 0.4);;
+    border-color: white;
+    border: 5px;
+    border-radius: 36px;
+    color: white;
+  }
+
+  .subjectLabel {
+    float: left;
+    width: 100px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .webBody {
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0, 0.4); /* Black w/opacity/see-through */
+    color: white;
+    position: absolute;
+    transform: translate(0%, 0%);
+    z-index: 2;
+    width: 100%;
+    top: 0%;
+    left: 0%;
+    /* padding: 20px; */
+  }
+
+  .background-image {
+      /* The image used */
+    background-image: url("/static/images/DH_TDM.jpg");
+
+    /* Add the blur effect */
+    filter: blur(10px);
+    -webkit-filter: blur(10px);
+    -moz-filter: blur(10px);
+    -o-filter: blur(10px);
+    -ms-filter: blur(10px);
+
+    /* Full height */
+    height: 100%;
+
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  #passOrFail {
+    text-align: center;
+    background-color: rgba(245, 245, 245, 0.6);
+    border-color: white;
+    border: 5px;
+    border-radius: 36px;
+    color: #147efb;
+  }
+
+  body, html {
+    height: 100%;
   }
 </style>
 <body>
-  <h1 align = center>MPURS</h1>
-  <p class="slogan" align = center>Mark Prediction and University Recommendation System</p>
-  <div id  = 'timeElapsed' align = "center"></div>
-  <h3>Điểm nhập vào</h3>
-    <input type="radio" name="subCom" value="nature" checked> KHỐI: MÔN TỰ NHIÊN
-    <input type="radio" name="subCom" value="social"> KHỐI: MÔN XÃ HÔI <br>
-    Chú ý: Vui lòng nhập điểm trung bình các môn (lớp 10, 11, 12)
-    <br>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">Toán:</div>
-          <div>
-              <input type="number" name="math0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="math1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="math2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-      </div>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">Ngữ văn:</div>
-          <div>
-              <input type="number" name="literature0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="literature1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="literature2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-      </div>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">Ngoại ngữ:</div>
-          <div>
-              <input type="number" name="english0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="english1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="english2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-       </div>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">Vật lý: </div>
-          <div>
-              <input type="number" name="physics0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="physics1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="physics2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-      </div>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">Hóa học:</div>
-          <div>
-              <input type="number" name="chemistry0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="chemistry1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="chemistry2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-      </div>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">Sinh học:</div>
-          <div>
-              <input type="number" name="biology0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="biology1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="biology2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-      </div>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">Lịch sử:</div>
-          <div>
-              <input type="number" name="history0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="history1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="history2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-      </div>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">Địa lý:</div>
-          <div>
-              <input type="number" name="geography0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="geography1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="geography2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-      </div>
-      <div>
-          <div style="width: 110px; color: red; float:left; background-color:yellow">GDCD:</div>
-          <div>
-              <input type="number" name="civiceducation0" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value="0" required="True">
-              <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value="0" required="True"><br>
-          </div>
-      </div>
-  <button id = "submitButton">Dự đoán</button>
+  <div class="background-image"></div>
+  <div class="webBody">
+  <div class="header">
+    <h1 align = center>TRƯỜNG ĐẠI HỌC THỦ DẦU MÔT </h1>
+    <h1 align = center>KHOA KỸ THUẬT - CÔNG NGHỆ</h1>
+    <h2 align = center>HỆ THỐNG TƯ VẤN VÀ PHÂN LOẠI HỌC SINH SỬ DỤNG KỸ THUẬT HỌC MÁY</h2>
+    <p class="slogan" align = center>(Mark Prediction and University Recommendation System)</p>
+  </div>
+  <!-- <div id  = 'timeElapsed' align = "center"></div> -->
+  <hr />
+  <div style="display: inline-block;float:left;width:30%">
+  <h3 align=center>Điểm nhập vào</h3>
+  <input type="radio" name="subCom" value="nature" checked> KHỐI: MÔN TỰ NHIÊN
+  <input type="radio" name="subCom" value="social"> KHỐI: MÔN XÃ HÔI <br>
+  Chú ý: Vui lòng nhập điểm trung bình các môn theo thứ tự (lớp 10, 11, 12)
   <br>
-  <h3>Điểm dự đoán</h3>
+  <div class="subjectLabel">Toán:</div>
+      <input type="number" name="math0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="math1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="math2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Ngữ văn:</div>
+      <input type="number" name="literature0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="literature1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="literature2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Ngoại ngữ:</div>
+      <input type="number" name="english0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="english1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="english2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Vật lý: </div>
+      <input type="number" name="physics0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="physics1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="physics2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Hóa học:</div>
+      <input type="number" name="chemistry0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="chemistry1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="chemistry2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Sinh học:</div>
+      <input type="number" name="biology0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="biology1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="biology2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Lịch sử:</div>
+      <input type="number" name="history0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="history1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="history2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Địa lý:</div>
+      <input type="number" name="geography0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="geography1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="geography2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">GDCD:</div>
+      <input type="number" name="civiceducation0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <button id = "submitButton">Dự đoán</button>
+</div>
+<div style="display: inline-block;width:70%">
+  <h3 align = center>Điểm dự đoán</h3>
+  <div align = center>
   Toán:
-  <div id="math"></div>
+  <div id="math" style="display: inline-block"></div>
   | Ngữ văn:
-  <div id="literature"></div>
+  <div id="literature" style="display: inline-block"></div>
   | Ngoại ngữ:
-  <div id="english"></div>
+  <div id="english" style="display: inline-block"></div>
   | Vật lý:
-  <div id="physics"></div>
+  <div id="physics" style="display: inline-block"></div>
   | Hóa học:
-  <div id="chemistry"></div>
+  <div id="chemistry" style="display: inline-block"></div>
   | Sinh học:
-  <div id="biology"></div>
+  <div id="biology" style="display: inline-block"></div>
   | Lịch sử:
-  <div id="history"></div>
+  <div id="history" style="display: inline-block"></div>
   | Địa lý:
-  <div id="geography"></div>
+  <div id="geography" style="display: inline-block"></div>
   | GDCD:
-  <div id="civiceducation"></div>
+  <div id="civiceducation" style="display: inline-block"></div>
+  </div>
+  <h3 align = center style="width:100%">Khả năng đậu đại học</h3>
+  <p id="passOrFail"></p>
+  <div id="chartContainer" style="height: 300px;"></div>
+</div>
+
+<br />
+<br />
+<div id="chartContainer_mean" style="height: 500px; width: 100%;"></div>
+
+</div>
+
+  <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+  <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
 </body>
+</html>
