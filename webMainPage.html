@@ -1,0 +1,317 @@
+﻿<!DOCTYPE HTML>
+<html lang="vi">
+<head>
+  <title>MPURS</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-reboot.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-grid.css">
+  <script type="text/javascript" src="//code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script type="text/javascript" src="/static/js/bootstrap.bundle.js"></script>
+  <script type="text/javascript" src="/static/js/bootstrap.js"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    function round_quarter(x) {
+      return Math.round(x*4)/4;
+    };
+
+    $(document).ready(function(){
+      namespace = '/home';
+      var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+      var subjects = ['math', 'literature', 'english', 'physics', 'chemistry', 'biology', 'history', 'geography', 'civiceducation'];
+      var numberOfYear = 3
+      socket.on('timeElapsed', function(msg) {
+        $('#timeElapsed').empty();
+        $('#timeElapsed').append('Time Elapsed: ' + msg.data);
+      });
+
+      socket.on('passOrFail', function(msg) {
+        $('#passOrFail').empty();
+        $('#passOrFail').append('Dự đoán: ' + msg.data);
+      });
+
+      socket.on('markPrediction', function(msg) {
+        var markPrediction = msg.data;
+        var markDict = {};
+        var markSum = {};
+        for (var key in markPrediction) {
+          markDict[key] = {};
+          markSum[key] = 0;
+          for (var i = 0; i < subjects.length; i++) {
+            markDict[key][subjects[i]] = parseFloat(markPrediction[key][0][i]);
+            markSum[key] += parseFloat(markPrediction[key][0][i]);
+          }
+        }
+
+        var chart = new CanvasJS.Chart("chartContainer", {
+        	exportEnabled: true,
+        	animationEnabled: true,
+        	title:{
+        		text: ""
+        	},
+        	legend:{
+        		cursor: "pointer",
+        		itemclick: explodePie
+        	},
+        	data: [{
+        		type: "pie",
+        		showInLegend: true,
+        		toolTipContent: "{name}: <strong>{y}đ</strong>",
+        		indexLabel: "{name} - {y}đ",
+        		dataPoints: [
+        			{ y: markSum['nature'], name: "Khối Tự nhiên", exploded: true },
+        			{ y: markSum['social'], name: "Khối Xã hội", exploded: true }
+        		]
+        	}]
+        });
+        chart.render();
+
+        function explodePie (e) {
+        	if(typeof (e.dataSeries.dataPoints[e.dataPointIndex].exploded) === "undefined" || !e.dataSeries.dataPoints[e.dataPointIndex].exploded) {
+        		e.dataSeries.dataPoints[e.dataPointIndex].exploded = true;
+        	} else {
+        		e.dataSeries.dataPoints[e.dataPointIndex].exploded = false;
+        	}
+        	e.chart.render();
+
+        }
+
+        var chart = new CanvasJS.Chart("chartContainer_detail", {
+        	animationEnabled: true,
+        	title:{
+        		text: ""
+        	},
+        	axisY: {
+        		title: "Mark Per Object"
+        	},
+        	legend: {
+        		cursor:"pointer",
+        		itemclick : toggleDataSeries
+        	},
+        	toolTip: {
+        		shared: true,
+        		content: toolTipFormatter
+        	},
+        	data: [{
+        		type: "bar",
+        		showInLegend: true,
+        		name: "Khối Tự nhiên",
+        		color: "blue",
+        		dataPoints: [
+              { y: markDict['nature']['civiceducation'], label: "GDCD" },
+              { y: markDict['nature']['geography'], label: "Địa Lý" },
+              { y: markDict['nature']['history'], label: "Lịch Sử" },
+              { y: markDict['nature']['biology'], label: "Sinh Học" },
+        			{ y: markDict['nature']['chemistry'], label: "Hoá Học" },
+              { y: markDict['nature']['physics'], label: "Vật Lý" },
+              { y: markDict['nature']['english'], label: "Tiếng Anh" },
+              { y: markDict['nature']['literature'], label: "Ngữ Văn" },
+              { y: markDict['nature']['math'], label: "Toán" }
+        		]
+        	},
+        	{
+        		type: "bar",
+        		showInLegend: true,
+        		name: "Khối Xã hội",
+        		color: "red",
+        		dataPoints: [
+              { y: markDict['social']['civiceducation'], label: "GDCD" },
+              { y: markDict['social']['geography'], label: "Địa Lý" },
+              { y: markDict['social']['history'], label: "Lịch Sử" },
+              { y: markDict['social']['biology'], label: "Sinh Học" },
+        			{ y: markDict['social']['chemistry'], label: "Hoá Học" },
+              { y: markDict['social']['physics'], label: "Vật Lý" },
+              { y: markDict['social']['english'], label: "Tiếng Anh" },
+              { y: markDict['social']['literature'], label: "Ngữ Văn" },
+              { y: markDict['social']['math'], label: "Toán" }
+        		]
+        	}]
+        });
+        chart.render();
+
+        function toolTipFormatter(e) {
+        	var str = "";
+        	var total = 0 ;
+        	var str3;
+        	var str2 ;
+        	for (var i = 0; i < e.entries.length; i++){
+        		var str1 = "<span style= \"color:"+e.entries[i].dataSeries.color + "\">" + e.entries[i].dataSeries.name + "</span>: <strong>"+  e.entries[i].dataPoint.y + "</strong> <br/>" ;
+        		total = e.entries[i].dataPoint.y + total;
+        		str = str.concat(str1);
+        	}
+          total = total/e.entries.length;
+        	str2 = "<strong>" + e.entries[0].dataPoint.label + "</strong> <br/>";
+        	str3 = "<span style = \"color:Tomato\">Trung bình: </span><strong>" + total + "</strong><br/>";
+        	return (str2.concat(str)).concat(str3);
+        }
+
+        function toggleDataSeries(e) {
+        	if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+        		e.dataSeries.visible = false;
+        	}
+        	else {
+        		e.dataSeries.visible = true;
+        	}
+        	chart.render();
+        }
+      });
+      $('#submitButton').click(function(event) {
+        var markSubmit = []
+        for (var i = 0; i < numberOfYear; i++) {
+          for (var k = 0; k < subjects.length; k++) {
+            markSubmit.push(document.getElementsByName(subjects[k] + i)[0].value);
+          };
+        };
+        socket.emit('calMark', markSubmit);
+        return 0;
+      });
+
+    });
+  </script>
+</head>
+<style>
+  .slogan {
+      line-height:1;
+      top: 0px; /* Changes the space between the logo and the slogan */
+      font-size: 1em; /* Changes the font size of the slogan */
+      font-style: italic; /* Changes the font style of the slogan */
+      /* color:#222222; /* Changes the color of the slogan */ */
+      letter-spacing:0px; /* Changes the letter spacing of the slogan */
+      left: 200px;
+  }
+
+  .header {
+    background-color: rgba(190, 190, 190, 0.4);;
+    border-color: white;
+    border: 5px;
+    border-radius: 36px;
+    color: white;
+  }
+
+  .subjectLabel {
+    float: left;
+    width: 100px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .webBody {
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0, 0.4); /* Black w/opacity/see-through */
+    color: white;
+    position: absolute;
+    transform: translate(0%, 0%);
+    z-index: 2;
+    width: 100%;
+    top: 0%;
+    left: 0%;
+    /* padding: 20px; */
+  }
+
+  .background-image {
+      /* The image used */
+    background-image: url("/static/images/DH_TDM.jpg");
+
+    /* Add the blur effect */
+    filter: blur(10px);
+    -webkit-filter: blur(10px);
+    -moz-filter: blur(10px);
+    -o-filter: blur(10px);
+    -ms-filter: blur(10px);
+
+    /* Full height */
+    height: 100%;
+
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  #passOrFail {
+    text-align: center;
+    background-color: rgba(245, 245, 245, 0.6);
+    border-color: white;
+    border: 5px;
+    border-radius: 36px;
+    color: #147efb;
+  }
+
+  body, html {
+    height: 100%;
+  }
+</style>
+<body>
+  <div class="background-image"></div>
+  <div class="webBody">
+  <div class="header">
+    <h1 align = center>TRƯỜNG ĐẠI HỌC THỦ DẦU MÔT </h1>
+    <h1 align = center>KHOA KỸ THUẬT - CÔNG NGHỆ</h1>
+    <h2 align = center>HỆ THỐNG TƯ VẤN VÀ PHÂN LOẠI HỌC SINH SỬ DỤNG KỸ THUẬT HỌC MÁY</h2>
+    <p class="slogan" align = center>(Mark Prediction and University Recommendation System)</p>
+  </div>
+  <!-- <div id  = 'timeElapsed' align = "center"></div> -->
+  <hr />
+  <div style="display: inline-block;float:left;width:30%">
+  <h3 align=center>Điểm nhập vào</h3>
+  Chú ý: Vui lòng nhập điểm trung bình các môn theo thứ tự (lớp 10, 11, 12)
+  <br>
+  <div class="subjectLabel">Toán:</div>
+      <input type="number" name="math0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="math1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="math2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Ngữ văn:</div>
+      <input type="number" name="literature0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="literature1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="literature2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Ngoại ngữ:</div>
+      <input type="number" name="english0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="english1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="english2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Vật lý: </div>
+      <input type="number" name="physics0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="physics1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="physics2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Hóa học:</div>
+      <input type="number" name="chemistry0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="chemistry1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="chemistry2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Sinh học:</div>
+      <input type="number" name="biology0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="biology1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="biology2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Lịch sử:</div>
+      <input type="number" name="history0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="history1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="history2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">Địa lý:</div>
+      <input type="number" name="geography0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="geography1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="geography2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <div class="subjectLabel">GDCD:</div>
+      <input type="number" name="civiceducation0" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value="0" required="True">
+      <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value="0" required="True"><br>
+  <button id = "submitButton">Dự đoán</button>
+</div>
+<div style="display: inline-block;width:70%">
+  <h3 align = center style="width:100%">Khả năng đậu đại học</h3>
+  <p id="passOrFail"></p>
+  <h3 align = center>Tỉ lệ tổng điểm khối tự nhiên & xã hội</h3>
+  <div id="chartContainer" style="height: 300px;"></div>
+</div>
+
+<br />
+<br />
+<h3 align = center>Điểm dự đoán</h3>
+<div id="chartContainer_detail" style="height: 500px; width: 100%;"></div>
+
+</div>
+
+  <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+  <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
+</body>
+</html>
