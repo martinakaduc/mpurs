@@ -47,31 +47,22 @@ async def debug(sid, data):
 async def calMark(sid, markSubmit):
     markSubmit = np.array(markSubmit).reshape(1, -1)
     markPrediction = {}
-    markDiff = {}
 
     markPrediction['nature'] = markNatureModel.predict(markSubmit)
-    markDiff['nature'] = np.sum(markPrediction['nature'] - meanMark['nature'])
-
     markPrediction['social'] = markSocialModel.predict(markSubmit)
-    markDiff['social'] = np.sum(markPrediction['social'] - meanMark['social'])
 
     markPrediction['nature'] = (np.round(markPrediction['nature']*4)/4).tolist()
     markPrediction['social'] = (np.round(markPrediction['social']*4)/4).tolist()
     # print(markPrediction)
     await sio.emit('markPrediction', {'data': markPrediction, 'meanMark': meanMark}, room = sid, namespace = '/home')
 
-    markDiff['max'] = max(markDiff['nature'], markDiff['social'])
 
-    if (markDiff['max'] >= 0 and markDiff['max'] < 5):
-        await sio.emit('passOrFail', {'data': "Bạn có khả năng đậu Đại học!"}, room=sid, namespace='/home')
-    elif (markDiff['max'] >= 5 and markDiff['max'] < 10):
-        await sio.emit('passOrFail', {'data': "Bạn có khả năng CAO đậu Đại học!"}, room=sid, namespace='/home')
-    elif (markDiff['max'] >= 10):
-        await sio.emit('passOrFail', {'data': "Bạn chắc chắn đậu Đại học!"}, room=sid, namespace='/home')
-    elif (markDiff['max'] >= -5 and markDiff['max'] < 0):
-        await sio.emit('passOrFail', {'data': "Bạn có nguy cơ không đậu Đại học!"}, room=sid, namespace='/home')
-    elif (markDiff['max'] < -5):
-        await sio.emit('passOrFail', {'data': "Bạn có nguy cơ CAO không đậu Đại học!"}, room=sid, namespace='/home')
+    if (markPrediction['nature'] > markPrediction['social']):
+        await sio.emit('passOrFail', {'data': "Bạn nên chọn thi khối Tự nhiên!"}, room=sid, namespace='/home')
+    elif (markPrediction['nature'] < markPrediction['social']):
+        await sio.emit('passOrFail', {'data': "Bạn nên chọn thi khối Xã hội!"}, room=sid, namespace='/home')
+    else:
+        await sio.emit('passOrFail', {'data': "Bạn có thể chọn thi khối Tự nhiên hay Xã hội đều được!"}, room=sid, namespace='/home')
 
 @sio.on('disconnect', namespace='/home')
 def test_disconnect(sid):
