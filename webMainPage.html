@@ -28,7 +28,12 @@
 
       socket.on('passOrFail', function(msg) {
         $('#passOrFail').empty();
-        $('#passOrFail').append('Dự đoán: ' + msg.data);
+        if (msg.data == "TỰ NHIÊN") {
+          $('#passOrFail').css("color", "rgb(78, 118, 190)");
+        } else if (msg.data == "XÃ HỘI") {
+          $('#passOrFail').css("color", "rgb(204, 60, 69)");
+        }
+        $('#passOrFail').append('KHỐI ' + msg.data);
       });
 
       socket.on('markPrediction', function(msg) {
@@ -83,7 +88,7 @@
         		text: ""
         	},
         	axisY: {
-        		title: "Mark Per Object"
+        		title: "Điểm dự đoán từng môn theo khối thi"
         	},
         	legend: {
         		cursor:"pointer",
@@ -97,7 +102,7 @@
         		type: "bar",
         		showInLegend: true,
         		name: "Khối Tự nhiên",
-        		color: "blue",
+        		color: "rgb(78, 118, 190)",
         		dataPoints: [
               { y: markDict['nature']['civiceducation'], label: "GDCD" },
               { y: markDict['nature']['geography'], label: "Địa Lý" },
@@ -114,7 +119,7 @@
         		type: "bar",
         		showInLegend: true,
         		name: "Khối Xã hội",
-        		color: "red",
+        		color: "rgb(204, 60, 69)",
         		dataPoints: [
               { y: markDict['social']['civiceducation'], label: "GDCD" },
               { y: markDict['social']['geography'], label: "Địa Lý" },
@@ -182,10 +187,10 @@
   }
 
   .header {
-    background-color: rgba(190, 190, 190, 0.4);;
-    border-color: white;
-    border: 5px;
-    border-radius: 36px;
+    background-color: #4caf50;
+    /* border-color: white; */
+    /* border: 5px; */
+    /* border-radius: 36px; */
     color: white;
   }
 
@@ -198,46 +203,22 @@
     box-sizing: border-box;
   }
 
-  .webBody {
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0, 0.4); /* Black w/opacity/see-through */
-    color: white;
-    position: absolute;
-    transform: translate(0%, 0%);
-    z-index: 2;
-    width: 100%;
-    top: 0%;
-    left: 0%;
-    /* padding: 20px; */
-  }
-
-  .background-image {
-      /* The image used */
-    background-image: url("/static/images/DH_TDM.jpg");
-
-    /* Add the blur effect */
-    filter: blur(10px);
-    -webkit-filter: blur(10px);
-    -moz-filter: blur(10px);
-    -o-filter: blur(10px);
-    -ms-filter: blur(10px);
-
-    /* Full height */
-    height: 100%;
-
-    /* Center and scale the image nicely */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-  }
-
   #passOrFail {
     text-align: center;
     background-color: rgba(245, 245, 245, 0.6);
     border-color: white;
     border: 5px;
     border-radius: 36px;
-    color: #147efb;
+    font-weight: bold;
+    font-size: 36px
+  }
+
+  .inputMark {
+    display: inline-block;
+    width:30%;
+    background-color: rgba(190, 190, 190, 0.4);
+    border-radius: 12px;
+    padding: 15px 15px;
   }
 
   body, html {
@@ -245,17 +226,22 @@
   }
 </style>
 <body>
-  <div class="background-image"></div>
-  <div class="webBody">
   <div class="header">
     <h1 align = center>TRƯỜNG ĐẠI HỌC THỦ DẦU MÔT </h1>
     <h1 align = center>KHOA KỸ THUẬT - CÔNG NGHỆ</h1>
-    <h2 align = center>HỆ THỐNG TƯ VẤN VÀ PHÂN LOẠI HỌC SINH SỬ DỤNG KỸ THUẬT HỌC MÁY</h2>
-    <p class="slogan" align = center>(Mark Prediction and University Recommendation System)</p>
+    <h2 align = center>HỆ THỐNG TƯ VẤN KHỐI THI TỐT NGHIỆP CHO HỌC SINH LỚP 12</h2>
+    <p class="slogan" align = center>(Subject Combination Recommendation System)</p>
   </div>
   <!-- <div id  = 'timeElapsed' align = "center"></div> -->
-  <hr />
-  <div style="display: inline-block;float:left;width:30%">
+  <br>
+  <div style="display: inline-block;float:left;width:70%">
+    <h3 align = center>Khối thi nên chọn</h3>
+    <p id="passOrFail"></p>
+    <h3 align = center>Tỉ lệ tổng điểm khối Tự nhiên & Xã hội</h3>
+    <div id="chartContainer" style="height: 300px;"></div>
+  </div>
+
+  <div style="" class="inputMark">
   <h3 align=center>Điểm nhập vào</h3>
   Chú ý: Vui lòng nhập điểm trung bình các môn theo thứ tự (lớp 10, 11, 12)
   <br>
@@ -295,21 +281,17 @@
       <input type="number" name="civiceducation0" min="0" max="10" step="0.1" value="0" required="True">
       <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value="0" required="True">
       <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value="0" required="True"><br>
-  <button id = "submitButton">Dự đoán</button>
+  <div align = center style="padding:10px 0px 0px 0px">
+  <button id = "submitButton" style="padding:10px 10px;border-radius:10px;color:#4caf50;">Tôi nên chọn khối thi nào?</button>
+  </div>
 </div>
-<div style="display: inline-block;width:70%">
-  <h3 align = center style="width:100%">Khối thi nên chọn</h3>
-  <p id="passOrFail"></p>
-  <h3 align = center>Tỉ lệ tổng điểm khối tự nhiên & xã hội</h3>
-  <div id="chartContainer" style="height: 300px;"></div>
-</div>
+
 
 <br />
 <br />
 <h3 align = center>Điểm dự đoán</h3>
 <div id="chartContainer_detail" style="height: 500px; width: 100%;"></div>
 
-</div>
 
   <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
   <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
