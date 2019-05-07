@@ -40,13 +40,20 @@
         var markPrediction = msg.data;
         var markDict = {};
         var markSum = {};
+        var markCombine = 0;
         for (var key in markPrediction) {
           markDict[key] = {};
           markSum[key] = 0;
           for (var i = 0; i < subjects.length; i++) {
             markDict[key][subjects[i]] = parseFloat(markPrediction[key][0][i]);
-            markSum[key] += parseFloat(markPrediction[key][0][i]);
+            if (i < 3) {
+              markSum[key] += parseFloat(markPrediction[key][0][i]);
+            } else {
+              markCombine += parseFloat(markPrediction[key][0][i]);
+            }
           }
+          markSum[key] += markCombine / 3;
+          markSum[key] = Math.round(markSum[key] * 100) / 100;
         }
 
         var chart = new CanvasJS.Chart("chartContainer", {
@@ -140,12 +147,16 @@
         	var total = 0 ;
         	var str3;
         	var str2 ;
+          var dontDivide = false;
         	for (var i = 0; i < e.entries.length; i++){
         		var str1 = "<span style= \"color:"+e.entries[i].dataSeries.color + "\">" + e.entries[i].dataSeries.name + "</span>: <strong>"+  e.entries[i].dataPoint.y + "</strong> <br/>" ;
-        		total = e.entries[i].dataPoint.y + total;
+        		total += e.entries[i].dataPoint.y;
         		str = str.concat(str1);
+            if (e.entries[i].dataPoint.y == 0) dontDivide = true;
         	}
-          total = total/e.entries.length;
+          if (!dontDivide) {
+            total = total/e.entries.length;
+          }
         	str2 = "<strong>" + e.entries[0].dataPoint.label + "</strong> <br/>";
         	str3 = "<span style = \"color:Tomato\">Trung bình: </span><strong>" + total + "</strong><br/>";
         	return (str2.concat(str)).concat(str3);
@@ -282,7 +293,7 @@
       <input type="number" name="civiceducation1" min="0" max="10" step="0.1" value="0" required="True">
       <input type="number" name="civiceducation2" min="0" max="10" step="0.1" value="0" required="True"><br>
   <div align = center style="padding:10px 0px 0px 0px">
-  <button id = "submitButton" style="padding:10px 10px;border-radius:10px;color:#4caf50;">Tôi nên chọn khối thi nào?</button>
+  <button id = "submitButton" style="padding:10px 10px;border-radius:10px;color:#FFFFFF;background-color:#4caf50">Tôi nên chọn khối thi nào?</button>
   </div>
 </div>
 
