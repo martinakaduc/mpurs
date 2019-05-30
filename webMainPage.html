@@ -26,21 +26,22 @@
         $('#timeElapsed').append('Time Elapsed: ' + msg.data);
       });
 
-      socket.on('passOrFail', function(msg) {
-        $('#passOrFail').empty();
-        if (msg.data == "TỰ NHIÊN") {
-          $('#passOrFail').css("color", "rgb(78, 118, 190)");
-        } else if (msg.data == "XÃ HỘI") {
-          $('#passOrFail').css("color", "rgb(204, 60, 69)");
-        }
-        $('#passOrFail').append('KHỐI ' + msg.data);
-      });
+      // socket.on('passOrFail', function(msg) {
+      //   $('#passOrFail').empty();
+      //   if (msg.data == "TỰ NHIÊN") {
+      //     $('#passOrFail').css("color", "rgb(78, 118, 190)");
+      //   } else if (msg.data == "XÃ HỘI") {
+      //     $('#passOrFail').css("color", "rgb(204, 60, 69)");
+      //   }
+      //   $('#passOrFail').append('KHỐI ' + msg.data);
+      // });
 
       socket.on('markPrediction', function(msg) {
         var markPrediction = msg.data;
         var markDict = {};
         var markSum = {};
         var markCombine = 0;
+        var combineChoose = '';
         for (var key in markPrediction) {
           markDict[key] = {};
           markSum[key] = 0;
@@ -55,6 +56,19 @@
           markSum[key] += markCombine / 3;
           markSum[key] = Math.round(markSum[key] * 100) / 100;
         }
+
+        $('#passOrFail').empty();
+        if (markSum['nature'] > markSum['social']) {
+          combineChoose = "TỰ NHIÊN";
+          $('#passOrFail').css("color", "rgb(78, 118, 190)");
+        } else if (markSum['nature'] < markSum['social']) {
+          combineChoose = "XÃ HỘI";
+          $('#passOrFail').css("color", "rgb(204, 60, 69)");
+        } else {
+          combineChoose = "TỰ NHIÊN | XÃ HỘI";
+          $('#passOrFail').css("color", "rgb(76, 175, 80)");
+        }
+        $('#passOrFail').append('KHỐI ' + combineChoose);
 
         var chart = new CanvasJS.Chart("chartContainer", {
         	exportEnabled: true,

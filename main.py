@@ -57,12 +57,12 @@ async def calMark(sid, markSubmit):
     await sio.emit('markPrediction', {'data': markPrediction, 'meanMark': meanMark}, room = sid, namespace = '/home')
 
 
-    if (markPrediction['nature'] > markPrediction['social']):
-        await sio.emit('passOrFail', {'data': "TỰ NHIÊN"}, room=sid, namespace='/home')
-    elif (markPrediction['nature'] < markPrediction['social']):
-        await sio.emit('passOrFail', {'data': "XÃ HỘI"}, room=sid, namespace='/home')
-    else:
-        await sio.emit('passOrFail', {'data': "TỰ NHIÊN | XÃ HỘI"}, room=sid, namespace='/home')
+    # if (np.sum(markPrediction['nature']) > np.sum(markPrediction['social'])):
+    #     await sio.emit('passOrFail', {'data': "TỰ NHIÊN"}, room=sid, namespace='/home')
+    # elif (np.sum(markPrediction['nature']) < np.sum(markPrediction['social'])):
+    #     await sio.emit('passOrFail', {'data': "XÃ HỘI"}, room=sid, namespace='/home')
+    # else:
+    #     await sio.emit('passOrFail', {'data': "TỰ NHIÊN | XÃ HỘI"}, room=sid, namespace='/home')
 
 @sio.on('disconnect', namespace='/home')
 def test_disconnect(sid):
