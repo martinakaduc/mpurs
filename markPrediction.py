@@ -41,13 +41,13 @@ markDataNature = np.array(markDataNature).astype(np.float32)
 markDataSocial = np.array(markDataSocial).astype(np.float32)
 
 # Train markDataNature Model
-# train, test= train_test_split(markDataNature, test_size=0.2)
-# trainData = train[:,:numberOfSubject*numberOfYear]
-# trainLabel = train[:,numberOfSubject*numberOfYear:]
-# testData = test[:,:numberOfSubject*numberOfYear]
-# testLabel = test[:,numberOfSubject*numberOfYear:]
-trainData = markDataNature[:,:numberOfSubject*numberOfYear]
-trainLabel = markDataNature[:,numberOfSubject*numberOfYear:]
+train, test= train_test_split(markDataNature, test_size=0.2)
+trainData = train[:,:numberOfSubject*numberOfYear]
+trainLabel = train[:,numberOfSubject*numberOfYear:]
+testData = test[:,:numberOfSubject*numberOfYear]
+testLabel = test[:,numberOfSubject*numberOfYear:]
+# trainData = markDataNature[:,:numberOfSubject*numberOfYear]
+# trainLabel = markDataNature[:,numberOfSubject*numberOfYear:]
 meanMark['nature'] = (np.round(np.sum(trainLabel, axis = 0) * 4 / len(trainLabel)) / 4).tolist()
 clf = RandomForestRegressor(n_estimators  = numberOfTree)
 # clf = LinearRegression()
@@ -64,19 +64,19 @@ print('Nature Trained!')
 #     print(clf.predict(testData[i].reshape(1,-1)))
 # print('Real Value: ')
 # print(testLabel)
-# sumError = 0
-# for i in range(len(testData)):
-#     sumError += (clf.predict(testData[i].reshape(1,-1)) - testLabel[i])**2
-# print(np.sqrt(sumError/len(testData)))
+sumError = 0
+for i in range(len(testData)):
+    sumError += (clf.predict(testData[i].reshape(1,-1)) - testLabel[i])**2
+print(np.sqrt(sumError/len(testData)))
 
 # Train markDataSocial Model
-# train, test= train_test_split(markDataSocial, test_size=0.2)
-# trainData = train[:,:numberOfSubject*numberOfYear]
-# trainLabel = train[:,numberOfSubject*numberOfYear:]
-# testData = test[:,:numberOfSubject*numberOfYear]
-# testLabel = test[:,numberOfSubject*numberOfYear:]
-trainData = markDataSocial[:,:numberOfSubject*numberOfYear]
-trainLabel = markDataSocial[:,numberOfSubject*numberOfYear:]
+train, test= train_test_split(markDataSocial, test_size=0.2)
+trainData = train[:,:numberOfSubject*numberOfYear]
+trainLabel = train[:,numberOfSubject*numberOfYear:]
+testData = test[:,:numberOfSubject*numberOfYear]
+testLabel = test[:,numberOfSubject*numberOfYear:]
+# trainData = markDataSocial[:,:numberOfSubject*numberOfYear]
+# trainLabel = markDataSocial[:,numberOfSubject*numberOfYear:]
 meanMark['social'] = (np.round(np.sum(trainLabel, axis = 0) * 4 / len(trainLabel)) / 4).tolist()
 clf = RandomForestRegressor(n_estimators  = numberOfTree)
 # clf = LinearRegression()
@@ -93,10 +93,10 @@ print('Social Trained!')
 #     print(clf.predict(testData[i].reshape(1,-1)))
 # print('Real Value: ')
 # print(testLabel)
-# sumError = 0
-# for i in range(len(testData)):
-#     sumError += (clf.predict(testData[i].reshape(1,-1)) - testLabel[i])**2
-# print(np.sqrt(sumError/len(testData)))
+sumError = 0
+for i in range(len(testData)):
+    sumError += (clf.predict(testData[i].reshape(1,-1)) - testLabel[i])**2
+print(np.sqrt(sumError/len(testData)))
 
 # Save meanMark into json
 with open('meanMark.json', "w", encoding='utf8') as json_file:
